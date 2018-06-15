@@ -88,4 +88,8 @@ sample.sequences.fa
 * search for 'consensus sequence' or 'alt ID' --> scroll down to "matches to 'consensus sequence'"
 * NAME --> this protein is the co-factor --> click name for more information from the selected TF database --> UniProt ID
 
-
+## Identifying co-regulators from meme-chip results
+* the top hit is the most enriched motif
+* the next best motif may be binding site of a co-regulator
+* If novel (meme-dreme) --> show more --> are the other motifs in the cluster known (i.e. found by CentriMo)?
+* In the cluster, what is the most common motif in "Known or Similar Motifs" column? - this is the potential co-regulator.
