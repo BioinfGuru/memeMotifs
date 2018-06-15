@@ -93,3 +93,28 @@ sample.sequences.fa
 * the next best motif may be binding site of a co-regulator
 * If novel (meme-dreme) --> show more --> are the other motifs in the cluster known (i.e. found by CentriMo)?
 * In the cluster, what is the most common motif in "Known or Similar Motifs" column? - this is the potential co-regulator.
+
+## Extract promoter peaks from a peak file
+1 Create a file containing the coordinates of all promotors in your species.
+* Download TSS coords from [biomart](https://www.ensembl.org/biomart/martview/cdbbc908631658bc94eaeee55643e20b) to tss.txt for each chromosome
+* Remove the header
+* Sort and adjust the TSS to include promoter regions:
+```
+sed -i -e 's/^/chr/' tss.txt
+sort -k1,1 -k2,2n tss.txt > tss.sorted.txt
+awk '{ print $1"\t"$2"\t"$2}' tss.sorted.txt >tss.sorted.bed
+for i in tss.sorted.bed; do awk -F $'\t' 'BEGIN {OFS=FS}{{if ($4 > 0){$2 = $2 - 2000; $3 = $3 + 200;}; if ($4 < 0) {$2 = $2 - 200; $3 = $3 + 2000;}; if ($2 < 0) {$2 = 0}} print $0}' $i >$i.adj; done;
+cut -f 1-3 tss.sorted.bed.adj > pro.bed
+```
+
+2 Filter the peak file
+```
+sed -i '/seqnames/d' peaks.bed
+sort -u -k1,1 -k2,2n peaks.bed
+awk '$9 >= 2 || $9 <= -2' peaks.bed > peaks.filtered.bed # removees peaks with cold change < 2
+```
+3 Extract promoter peaks
+```
+# replace "-wa -u" with  "-v" to get peaks not occuring in enhancer regions
+bedtools intersect -a peaks.filtered.bed -b pro.bed -wa -u > promoter.peaks.bed
+```
