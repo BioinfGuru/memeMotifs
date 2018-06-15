@@ -58,5 +58,34 @@ For each peak pf 500bp the default is to use the centre 100 for motif searching 
 * create background file (fasta-get-markov -m 2)
 * add to meme-chip command:		-ccut = 0 --meme-maxsize = [600 x mean peak length]
 
+## Basic meme-chip command
+```
+meme-chip
+-oc memechip_out /
+-dna /
+-bfile background.model / # or '-order N' if no background model
+-norand / 
+-meme-mod zoops /
+-meme-nmotifs 10 /
+-meme-minw 6 /
+-meme-maxw 30 /
+-meme-p 12 /
+-spamo-skip / # disables spamo, takes too long, just run on individual motifs you are interested in from the results
+-db meme_install/db/motifs/MOUSE/HOCOMOCOv10_MOUSE_mono_meme_format.meme /
+-db meme_install/db/motifs/MOUSE/uniprobe_mouse.meme /
+-db meme_install/db/motifs/JASPAR/JASPAR_CORE_2016_vertebrates.meme / 
+-db meme_install/db/motifs/HUMAN/HOCOMOCOv10_HUMAN_mono_meme_format.meme /
+sample.sequences.fa
+```
+## Identifying co-factors from meme-chip results
+* click "distribution" graph of top motif to display centrimo output, the list of enriched motifs is ranked by E-value
+* the top motifs (novel and known) will be similar - hover over the id to see the PWM
+* move down the list until you see a dissimilar motif, and select it
+* copy the list of matching sequences
+* use this list in go enrichment and pathway analysis
+* copy the consensus sequence + make a note of the program (meme or dreme?) + alt ID
+* go to main results html --> programs --> TomTom link (1st = meme, 2nd = dreme)
+* search for 'consensus sequence' or 'alt ID' --> scroll down to "matches to 'consensus sequence'"
+* NAME --> this protein is the co-factor --> click name for more information from the selected TF database --> UniProt ID
 
 
