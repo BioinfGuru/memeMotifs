@@ -1,0 +1,136 @@
+####################
+differential binding
+####################
+
+	- bdgdiff output files:
+		- /NGS/working_projects/Zfhx3_ChipSeq_v2/FASTQ_2_filtered/Macs_results/Macs_results_001/differential/diff_Zt3VsZt15_c3.0_[cond1|cond2|common].bed
+	- annotate:
+		- /NGS/users/Kenneth/scripts/R/chipPeakAnno_singleFile.r (no qval so filtering not possible, also produces plots)
+	- Venn diagrams:	
+		- http://www.interactivenn.net/index2.html
+
+###############
+motif discovery
+###############
+
+	A) Split narrowPeak file into promoter/enhancer peaks:
+
+			Download TSS positions from biomart include chr (1-19, X, Y, MT), tss and strand --> tss.txt
+			Remove header
+			sed -i -e 's/^/chr/' tss.txt
+			sort -k1,1 -k2,2n tss.txt > tss.sorted.txt
+			make an "end" column to complete bed format (duplicate start column in libre calc) --> tss.bed
+			Adjust start and end positions to include promoter regions (tss-2000, tss+200, depending on strand):
+
+					for i in tss.bed; do awk -F $'\t' 'BEGIN {OFS=FS}{{if ($4 > 0){$2
+					= $2 - 2000; $3 = $3 + 200;}; if ($4 < 0) {$2 = $2 - 200; $3 = $3
+					+ 2000;}; if ($2 < 0) {$2 = 0}} print $0}' $i >$i.adj; done
+
+			cut -f 1-3 tss.bed.adj > pro.bed
+			bedtools intersect -a narrowPeakfile -b pro.bed -wa -u > narrowPeak.pro
+			bedtools intersect -a narrowPeakfile -b pro.bed -v > narrowPeak.enh
+
+			# pro.bed file is stored at: /NGS/working_projects/Zfhx3_ChipSeq_v2/FASTQ_2_filtered/Macs_results/motifs/pro.bed
+
+
+	B) /NGS/users/Kenneth/scripts/memechip/memechip.pl used to discovery motifs in the narrowPeak files
+
+			perl /NGS/users/Kenneth/scripts/memechip/memechip.pl -i 1zt3_macs_peaks.narrowPeak.all -o ./all -m n
+
+###############
+find AT motif
+###############
+
+	- Create minimeme format for both motifs:
+		- hocomoco motif:	
+			- Download motif position count matrix (PCM) format: http://hocomoco10.autosome.ru/motif/ZFHX3_MOUSE.H10MO.D
+			- Convert PCM to meme format: chen2meme ZFHX3_MOUSE.H10MO.D.pcm
+		- parsons motif
+			- get matrix from /NGS/users/Sid/New_adult_sci_MM10/RemoveRep/network/Updated/MotifOccurences/at/AT_matrix_final050914.txt
+			- change file extension to .pfm
+			- convert to meme format: jaspar2meme -pfm .
+		- combine into a single minimeme file
+	- Run FIMO
+		command:
+			fimo --bgfile /NGS/working_projects/Zfhx3_ChipSeq_v2/FASTQ_2_filtered/Macs_results/motifs/results/unfiltered_p001_zt3_peaks/enh/top1000.backgroundModel --thresh 0.0001 --oc /NGS/working_projects/Zfhx3_ChipSeq_v2/FASTQ_2_filtered/Macs_results/motifs/results/unfiltered_p001_zt3_peaks/enh/atmotif/fimo/ /NGS/working_projects/Zfhx3_ChipSeq_v2/FASTQ_2_filtered/Macs_results/motifs/ZFHX3_ATmotif.minimeme /NGS/working_projects/Zfhx3_ChipSeq_v2/FASTQ_2_filtered/Macs_results/motifs/results/unfiltered_p001_zt3_peaks/enh/top1000.sequences.fa
+
+		parse:  
+			sed '/motif/d' fimo.txt | sed 's/:/\t/g' | awk -F "-" '{ st = index($0,"-");print $1 "\t" substr($0,st+1)}' | awk '{ print $2"\t"$3+$5"\t"$3+$6"\t"$7"\t"$8"\t"$9"\t"$10"\t"$11"\t"$1}' >fimo.parsed
+
+		annotate for targets + tads: 
+			/NGS/users/Kenneth/scripts/R/chipPeakAnno_singleFile.r
+		
+	- Run MCAST
+		mcast --bgfile /NGS/working_projects/Zfhx3_ChipSeq_v2/FASTQ_2_filtered/Macs_results/motifs/results/unfiltered_p001_zt15_peaks/pro/top1000.backgroundModel --max-gap 50 --motif-pthresh 0.0005 --output-ethresh 10.0 -oc /NGS/working_projects/Zfhx3_ChipSeq_v2/FASTQ_2_filtered/Macs_results/motifs/results/unfiltered_p001_zt15_peaks/pro/atmotif/mcast/ /NGS/working_projects/Zfhx3_ChipSeq_v2/FASTQ_2_filtered/Macs_results/motifs/ZFHX3_ATmotif.minimeme /NGS/working_projects/Zfhx3_ChipSeq_v2/FASTQ_2_filtered/Macs_results/motifs/results/unfiltered_p001_zt15_peaks/pro/top1000.sequences.fa
+	- Run SPAMO
+		- AT motif is primary motif
+		- create a minimal meme format file "topRes.minmeme" containing the secondary motifs motifs (meme-chip.html --> meme/dreme results --> download)
+		- spamo -primaryi 1 -bg /NGS/working_projects/Zfhx3_ChipSeq_v2/FASTQ_2_filtered/Macs_results/motifs/results/unfiltered_p001_zt15_peaks/enh/top1000.backgroundModel -oc /NGS/working_projects/Zfhx3_ChipSeq_v2/FASTQ_2_filtered/Macs_results/motifs/results/unfiltered_p001_zt15_peaks/enh/atmotif/spamo/hoco/ /NGS/working_projects/Zfhx3_ChipSeq_v2/FASTQ_2_filtered/Macs_results/motifs/results/unfiltered_p001_zt15_peaks/enh/top1000.sequences.fa /NGS/working_projects/Zfhx3_ChipSeq_v2/FASTQ_2_filtered/Macs_results/motifs/ZFHX3_ATmotif.minimeme /NGS/Software/meme_install/db/motifs/MOUSE/HOCOMOCOv10_MOUSE_mono_meme_format.meme /NGS/Software/meme_install/db/motifs/MOUSE/uniprobe_mouse.meme /NGS/Software/meme_install/db/motifs/JASPAR/JASPAR_CORE_2016_vertebrates.meme /NGS/Software/meme_install/db/motifs/HUMAN/HOCOMOCOv10_HUMAN_mono_meme_format.meme
+
+		- spamo -primaryi 2 -bg /NGS/working_projects/Zfhx3_ChipSeq_v2/FASTQ_2_filtered/Macs_results/motifs/results/unfiltered_p001_zt15_peaks/enh/top1000.backgroundModel -oc /NGS/working_projects/Zfhx3_ChipSeq_v2/FASTQ_2_filtered/Macs_results/motifs/results/unfiltered_p001_zt15_peaks/enh/atmotif/spamo/parsons/ /NGS/working_projects/Zfhx3_ChipSeq_v2/FASTQ_2_filtered/Macs_results/motifs/results/unfiltered_p001_zt15_peaks/enh/top1000.sequences.fa /NGS/working_projects/Zfhx3_ChipSeq_v2/FASTQ_2_filtered/Macs_results/motifs/ZFHX3_ATmotif.minimeme /NGS/Software/meme_install/db/motifs/MOUSE/HOCOMOCOv10_MOUSE_mono_meme_format.meme /NGS/Software/meme_install/db/motifs/MOUSE/uniprobe_mouse.meme /NGS/Software/meme_install/db/motifs/JASPAR/JASPAR_CORE_2016_vertebrates.meme /NGS/Software/meme_install/db/motifs/HUMAN/HOCOMOCOv10_HUMAN_mono_meme_format.meme
+
+
+#################
+checking chr6
+#################
+
+	- Apart from the CTCF motif, all other motifs in the enh peaks that are enriched occur mostly in chr6 when filtered (q<0.01)
+	- Bed file created of these chr6 positions:			
+		- awk '{ print $3"\t"$4"\t"$5"\t"$6"\t"$2}' p1.zt15.enh.f23456.filtered | sort -k 1,1 -k2,2n > p1.zt15.enh.f23456.bed
+	- Visualisation on IGV indicates a tandem repeat:	
+		- /NGS/working_projects/Zfhx3_ChipSeq_v2/FASTQ_2_filtered/Macs_results/motifs/results/igv_session.xml
+	- the bed files were converted to fasta sequences using ucsc mm10 masked genome --> none are masked
+	- the region (chr6:47650000-47780000) was extracted from UCSC mm10 masked genome showing vast sections of masking:
+		fastaFromBed -fi /NGS/Software/meme_install/db/sequences/mm10_masked.fa -bed chr6.repeat.bed -fo chr6.repeat.fasta
+	- The region is extensively masked
+
+############################################
+Parse + annotate fimo files + create plots
+############################################
+
+	- Parse:
+		- sed '/motif/d' fimo.txt | awk '{ print $3"\t"$4"\t"$5"\t"$6"\t"$7"\t"$8"\t"$9"\t"$10"\tM1"}' >fimo.parsed	# change last column as appropriate
+	- Annotate:	
+		- /NGS/users/Kenneth/scripts/R/chipPeakAnno_singleFile.r
+		- This script filters by qval<0.1
+		- Also produces distance to TSS plots
+	- Scatter plots of chromosomal distribution:
+		- Combine FILTERED M1-3 annotated fimo files for each time point
+			- cat  p1/pro/fimo1/fimo.parsed.anno p1/pro/fimo2/fimo.parsed.anno p1/enh/fimo1/fimo.parsed.anno >p1zt3.anno
+			- sed -i '1!{/^seqnames/d;}' out.anno 
+		- /NGS/working_projects/Zfhx3_ChipSeq_v2/FASTQ_2_filtered/Macs_results/motifs/plotScatter.r
+	- Assess statistical differences in number of motif locations between timepoints:
+		- Combine UNFILTERED M1-3 annotated fimo files for each time point
+			- cat /NGS/working_projects/Zfhx3_ChipSeq_v2/FASTQ_2_filtered/Macs_results/motifs/results/unfiltered_p001_zt15_peaks/pro/zoops/fimo_out_1/fimo.parsed.anno /NGS/working_projects/Zfhx3_ChipSeq_v2/FASTQ_2_filtered/Macs_results/motifs/results/unfiltered_p001_zt15_peaks/pro/zoops/fimo_out_2/fimo.parsed.anno /NGS/working_projects/Zfhx3_ChipSeq_v2/FASTQ_2_filtered/Macs_results/motifs/results/unfiltered_p001_zt15_peaks/enh/zoops/fimo_out_1/fimo.parsed.anno | sed '1!{/^seqnames/d;}' | sed "s/$/\tzt15/" >p1zt15.anno
+		- repeat for zt3
+		- /NGS/working_projects/Zfhx3_ChipSeq_v2/FASTQ_2_filtered/Macs_results/motifs/plotBox.r
+	- Venn diagrams of TADs and targets filtered by qval<0.01
+		- http://www.interactivenn.net/index.html
+		- use filtered tad/target lists in the fimo_out folders
+
+################
+Network Analysis
+################
+	- ChIP-seq data:
+		- /NGS/working_projects/Zfhx3_ChipSeq_v2/FASTQ_2_filtered/Macs_results/motifs/results/network/zfhx3_chip
+		- create genelist + attributes (timepoint + qval) files
+			- cut -f 25 p1zt3.anno | sed '/ensembl/d' | sed '/^NA$/d' | sed 's/;/\n/'g | sed "s/$/\tzt3/" | sort -u >p1.zt3.targets
+			- cut -f 25 p1zt15.anno | sed '/ensembl/d' | sed '/^NA$/d' | sed 's/;/\n/'g | sed "s/$/\tzt15/" | sort -u >p1.zt15.targets
+			- cat p1.zt3.targets p1.zt15.targets | sort -u >p1.target.time.attr
+			- cut -f 1 p1.target.time.attr >p1.targets
+		- create pie chart attribute file
+			- cat p1zt3.anno p1zt15.anno | sed '1!{/^seqnames/d;}' >p1.anno
+			- perl /NGS/users/Kenneth/ppi_plotting/stringdbR_cytoscape/makePieChartAttributeFile.pl /NGS/working_projects/Zfhx3_ChipSeq_v2/FASTQ_2_filtered/Macs_results/motifs/results/annotations/p1.anno file:///home/kcondon/NGS/working_projects/Zfhx3_ChipSeq_v2/FASTQ_2_filtered/Macs_results/motifs/results/network/p1.motif.attr
+	- ADULT_sci data
+		- /NGS/working_projects/Zfhx3_ChipSeq_v2/FASTQ_2_filtered/Macs_results/motifs/results/network/adult_sci/adultSci.list
+	- Create RNA/CHIP lists + experiment attribute files
+		- /NGS/users/Kenneth/ppi_plotting/stringdbR_cytoscape/makeStringIn.pl
+	- Create network:	/NGS/users/Kenneth/ppi_plotting/stringdbR_cytoscape/readme.txt
+	- Import:
+		- network: 		file --> import --> network (multiple file types) --> xgmml file
+		- style:		file --> import --> vizmap property file --> mystyle --> vizmapper --> mystyle --> node label --> display name --> passthrough mapper
+		- attributes:	file --> import --> attributes from table:
+							stringInputExp --> node shape --> exp --> discrete mapping (both-diamond, chip-ellipse, rna-triangle)
+							p1.motif.attr --> piechart
+	- Clustering with MCODE (default settings) as described in /NGS/users/Kenneth/ppi_plotting/stringdbR_cytoscape/readme.txt
+	- GSEA with G:profiler as described in as described in /NGS/users/Kenneth/ppi_plotting/stringdbR_cytoscape/readme.txt
