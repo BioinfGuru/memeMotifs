@@ -1,6 +1,8 @@
 # Motif discovery with [meme suite](http://meme-suite.org/index.html)
 
-This repository provides a useful workflow for many of the tools in meme suite including [MEME-ChIP](http://meme-suite.org/doc/meme-chip.html?man_type=web) for motif discovery in sequencing data e.g. RNA-seq, ChIP-seq and ATAC-seq
+This is a work in progress.
+
+This repository provides a useful workflow for many of the tools in meme suite including [MEME-ChIP](http://meme-suite.org/doc/meme-chip.html?man_type=web) for motif discovery in sequencing data e.g. RNA-seq, ChIP-seq and ATAC-seq. To use this tutorial you will need to install [Meme Suite](http://alternate.meme-suite.org/doc/install.html?man_type=web) and the [Meme motif databases](http://alternate.meme-suite.org/doc/install.html?man_type=web#motif_db.csv).
 
 ## Meme tools
 | Name | Description |
