@@ -7,12 +7,13 @@ This repository provides a useful workflow for many of the tools in meme suite i
 ## Meme tools
 | Name | Description |
 |------|-------------|
-| Meme | De novo motif discovery, highly specific, slow, no TF database used |
-| Dreme | De novo motif discovery, highly sensitive, fast, no TF database used |
-| TomTom | Takes all the de novo motifs found by meme and dreme and looks in the provided TF database for similar motifs |
-| Centrimo | Takes all motifs (denovo + from databases) and checks for their enrichment in your dataset at the peak centers, very useful for finding cofactors that bind with a ChiP-ed TFs |
-| Spamo | Uses a discovered (known or novel) motif as the "primary" motif, and each of the other discovered motifs (known or novel) as "secondary" motifs and reports the secondary motifs whose occurrences are enriched at particular distances relative to the primary motif's occurrences in the input sequences i.e. good for finding co-factors of your motif |
-| Fimo | Scans sequences to Find all Individual Motif Occurrences |
+| [Meme](http://alternate.meme-suite.org/doc/meme.html?man_type=web) | De novo motif discovery, highly specific, slow, no TF database used |
+| [Dreme](http://alternate.meme-suite.org/doc/dreme.html?man_type=web) | De novo motif discovery, highly sensitive, fast, no TF database used |
+| [TomTom](http://alternate.meme-suite.org/doc/tomtom.html?man_type=web) | Takes all the de novo motifs found by meme and dreme and looks in the provided TF database for similar motifs |
+| [Centrimo](http://alternate.meme-suite.org/doc/centrimo.html?man_type=web) | Takes all motifs (denovo + from databases) and checks for their enrichment in your dataset at the peak centers, very useful for finding cofactors that bind with a ChiP-ed TFs |
+| [Spamo](http://alternate.meme-suite.org/doc/spamo.html?man_type=web) | Uses a discovered (known or novel) motif as the "primary" motif, and each of the other discovered motifs (known or novel) as "secondary" motifs and reports the secondary motifs whose occurrences are enriched at particular distances relative to the primary motif's occurrences in the input sequences i.e. good for finding co-factors of your motif |
+| [Fimo](http://alternate.meme-suite.org/doc/fimo.html?man_type=web) | Scans sequences to Find all Individual Motif Occurrences |
+| [Meme-ChIP](http://alternate.meme-suite.org/doc/meme-chip.html?man_type=web) | Mmotif discovery on LARGE sets of nucleotide sequences e.g. ChIP-seq data |
 
 ## Prepare your reference fasta file
 Download the latest masked reference for your species from [UCSC Golden Path](http://hgdownload.cse.ucsc.edu/downloads.html). For example, for mouse:
